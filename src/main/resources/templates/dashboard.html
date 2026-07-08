@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Dashboard tháng này</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Tổng thu</h6>
+                    <p class="fs-3 fw-bold mb-0"
+                       th:text="${#numbers.formatDecimal(data.totalIncome, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Tổng chi</h6>
+                    <p class="fs-3 fw-bold mb-0"
+                       th:text="${#numbers.formatDecimal(data.totalExpense, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Số dư (thu - chi tháng này)</h6>
+                    <p class="fs-3 fw-bold mb-0"
+                       th:text="${#numbers.formatDecimal(data.netBalance, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">Số dư các ví (Tổng:
+                    <span th:text="${#numbers.formatDecimal(data.totalWalletBalance, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>)
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="w : ${data.wallets}">
+                        <span th:text="${w.name}">Ví</span>
+                        <span th:text="${#numbers.formatDecimal(w.balance, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(data.wallets)}">Chưa có ví nào</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">Top danh mục chi tiêu tháng này</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        th:each="stat : ${data.topExpenseCategories}">
+                        <span>
+                            <i th:if="${stat.icon}" th:class="'bi ' + ${stat.icon}"></i>
+                            <span th:text="${stat.categoryName}">Danh mục</span>
+                        </span>
+                        <span class="fw-bold" th:text="${#numbers.formatDecimal(stat.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(data.topExpenseCategories)}">
+                        Chưa có chi tiêu nào tháng này
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">Giao dịch gần đây</div>
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th>Ngày</th>
+                <th>Loại</th>
+                <th>Danh mục</th>
+                <th>Ví</th>
+                <th class="text-end">Số tiền</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="t : ${data.recentTransactions}">
+                <td th:text="${#temporals.format(t.transactionDate, 'dd/MM/yyyy')}"></td>
+                <td>
+                    <span th:if="${t.type.name() == 'INCOME'}" class="badge bg-success">Thu</span>
+                    <span th:if="${t.type.name() == 'EXPENSE'}" class="badge bg-danger">Chi</span>
+                </td>
+                <td th:text="${t.category.name}"></td>
+                <td th:text="${t.wallet.name}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(t.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(data.recentTransactions)}">
+                <td colspan="5" class="text-center text-muted">Chưa có giao dịch nào</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

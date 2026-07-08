@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Báo cáo</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Báo cáo theo danh mục</h2>
+
+    <form th:action="@{/reports}" method="get" class="row g-2 mb-4 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small">Từ ngày</label>
+            <input type="date" name="fromDate" class="form-control" th:value="${filter.fromDate}"/>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Đến ngày</label>
+            <input type="date" name="toDate" class="form-control" th:value="${filter.toDate}"/>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Loại</label>
+            <select name="type" class="form-select">
+                <option th:each="t : ${types}" th:value="${t}"
+                        th:selected="${filter.type == t}"
+                        th:text="${t.name() == 'INCOME' ? 'Thu' : 'Chi'}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Xem báo cáo</button>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <span>Chi tiết theo danh mục</span>
+            <span class="fw-bold">Tổng: <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></span>
+        </div>
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th>Danh mục</th>
+                <th class="text-end">Số tiền</th>
+                <th class="text-end">Tỷ lệ</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${stats}">
+                <td>
+                    <i th:if="${s.icon}" th:class="'bi ' + ${s.icon}"></i>
+                    <span th:text="${s.categoryName}"></span>
+                </td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(s.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                <td class="text-end"
+                    th:text="${total.compareTo(T(java.math.BigDecimal).ZERO) > 0
+                              ? #numbers.formatDecimal(s.totalAmount.multiply(T(java.math.BigDecimal).valueOf(100)).divide(total, 1, T(java.math.RoundingMode).HALF_UP), 1, 1) + '%'
+                              : '0%'}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(stats)}">
+                <td colspan="3" class="text-center text-muted">Không có dữ liệu trong khoảng thời gian này</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

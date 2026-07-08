@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Giao dịch</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Giao dịch Thu/Chi</h2>
+        <a href="/transactions/new" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm giao dịch
+        </a>
+    </div>
+    <form th:action="@{/transactions}" method="get" class="row g-2 mb-4 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label small">Từ ngày</label>
+            <input type="date" name="fromDate" class="form-control form-control-sm"
+                   th:value="${filter.fromDate}"/>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Đến ngày</label>
+            <input type="date" name="toDate" class="form-control form-control-sm"
+                   th:value="${filter.toDate}"/>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Loại</label>
+            <select name="type" class="form-select form-select-sm">
+                <option value="">-- Tất cả --</option>
+                <option th:each="t : ${types}" th:value="${t}"
+                        th:selected="${filter.type == t}"
+                        th:text="${t.name() == 'INCOME' ? 'Thu' : 'Chi'}"></option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Danh mục</label>
+            <select name="categoryId" class="form-select form-select-sm">
+                <option value="">-- Tất cả --</option>
+                <option th:each="c : ${categories}" th:value="${c.id}"
+                        th:selected="${filter.categoryId == c.id}"
+                        th:text="${c.name}"></option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Ví</label>
+            <select name="walletId" class="form-select form-select-sm">
+                <option value="">-- Tất cả --</option>
+                <option th:each="w : ${wallets}" th:value="${w.id}"
+                        th:selected="${filter.walletId == w.id}"
+                        th:text="${w.name}"></option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-sm btn-primary w-100">
+                <i class="bi bi-funnel"></i> Lọc
+            </button>
+        </div>
+    </form>
+    <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+            <th>Ngày</th>
+            <th>Loại</th>
+            <th>Danh mục</th>
+            <th>Ví</th>
+            <th class="text-end">Số tiền</th>
+            <th>Ghi chú</th>
+            <th class="text-end">Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${transactions}">
+            <td th:text="${#temporals.format(t.transactionDate, 'dd/MM/yyyy')}">01/01/2026</td>
+            <td>
+                <span th:if="${t.type.name() == 'INCOME'}" class="badge bg-success">Thu</span>
+                <span th:if="${t.type.name() == 'EXPENSE'}" class="badge bg-danger">Chi</span>
+            </td>
+            <td th:text="${t.category.name}">Danh mục</td>
+            <td th:text="${t.wallet.name}">Ví</td>
+            <td class="text-end fw-bold"
+                th:text="${#numbers.formatDecimal(t.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+            <td th:text="${t.note}">Ghi chú</td>
+            <td class="text-end">
+                <a th:href="@{/templates/transaction/{id}/edit(id=${t.id})}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <form th:action="@{/templates/transaction/{id}/delete(id=${t.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('Xóa giao dịch này? Số dư ví sẽ được hoàn tác.');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(transactions)}">
+            <td colspan="7" class="text-center text-muted">Chưa có giao dịch nào.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
