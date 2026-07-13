@@ -4,6 +4,43 @@
       layout:decorate="~{layout}">
 <head>
     <title>Ví/Tài khoản</title>
+    <style>
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+
+            padding: 10px 20px;
+
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+
+            border: none;
+            border-radius: 12px;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            text-decoration: none;
+
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+
+            transition: all 0.3s ease;
+        }
+
+        .btn-home:hover {
+            color: white;
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.45);
+        }
+
+        .btn-home:active {
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
@@ -43,6 +80,12 @@
             <p class="text-muted mt-2">Chưa có ví nào. Hãy tạo ví đầu tiên để bắt đầu!</p>
             <a href="/wallets/new" class="btn btn-primary btn-sm">Tạo ví ngay</a>
         </div>
+    </div>
+    <div class="mb-4">
+        <a th:href="@{/}" class="btn btn-home">
+            <i class="bi bi-house-door-fill"></i>
+            Home
+        </a>
     </div>
 </div>
 </body>
