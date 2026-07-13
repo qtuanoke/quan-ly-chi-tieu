@@ -1,67 +1,227 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Báo cáo</title>
+    <meta charset="UTF-8">
+    <title>Báo cáo thu chi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        :root{
+            --navy-deep:#111C33; --navy:#1B2A4A; --navy-soft:#2C3E63;
+            --gold:#C9A227; --gold-bright:#E4C25E;
+            --paper:#F3EFE6; --paper-card:#FBF8F1;
+            --ink:#20232B; --ink-soft:#5B5F6B;
+            --green:#3F7A5D; --amber:#B9791F; --red:#A93A3A; --line:#DCD4C0;
+            --teal:#3E7C8C; --plum:#7A4E6D; --brown:#8A6444;
+        }
+        *{box-sizing:border-box;}
+        body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+
+        .cover{background:radial-gradient(circle at 85% -20%, rgba(228,194,94,0.18), transparent 55%),linear-gradient(180deg, var(--navy-deep), var(--navy) 70%, var(--navy-soft));color:#F4EFE0;padding:44px 32px 64px;position:relative;overflow:hidden;}
+        .cover::after{content:"";position:absolute;left:0;right:0;bottom:0;height:28px;background:var(--paper);border-radius:50% 50% 0 0 / 100% 100% 0 0;transform:scaleX(1.3);}
+        .cover-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;max-width:1080px;margin:0 auto;}
+        .brand{display:flex;align-items:center;gap:12px;}
+        .brand-mark{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg, var(--gold-bright), var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;color:var(--navy-deep);font-size:19px;box-shadow:0 2px 0 rgba(0,0,0,0.25);}
+        .brand-name{font-family:'Fraunces',serif;font-size:15px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;}
+        .brand-title{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin-top:2px;}
+
+        .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+        .tabs{display:flex;background:rgba(255,255,255,0.06);border:1px solid rgba(228,194,94,0.35);border-radius:12px;padding:4px;}
+        .tabs a{padding:8px 16px;border-radius:9px;font-size:13.5px;font-weight:600;color:#D9D2C0;text-decoration:none;}
+        .tabs a.active{background:var(--gold-bright);color:var(--navy-deep);}
+        .nav-arrows{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(228,194,94,0.35);border-radius:12px;padding:4px 6px;}
+        .nav-arrows a{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#F4EFE0;text-decoration:none;font-size:15px;}
+        .nav-arrows a:hover{background:rgba(255,255,255,0.1);}
+        .range-label{padding:0 8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#F4EFE0;white-space:nowrap;}
+
+        .totals{max-width:1080px;margin:34px auto 0;display:flex;gap:14px;flex-wrap:wrap;}
+        .total-card{flex:1;min-width:190px;background:rgba(255,255,255,0.05);border:1px solid rgba(228,194,94,0.22);border-radius:14px;padding:16px 20px;}
+        .total-card .label{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;opacity:.65;}
+        .total-card .value{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;margin-top:6px;color:#F4EFE0;}
+        .total-card.income .value{color:#8FD6B4;}
+        .total-card.expense .value{color:#E9A5A5;}
+        .total-card.balance.negative .value{color:var(--gold-bright);}
+
+        main{max-width:1080px;margin:0 auto;padding:0 32px 60px;}
+        .panels{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:36px;}
+        @media (max-width:860px){.panels{grid-template-columns:1fr;}}
+
+        .panel{background:var(--paper-card);border:1px solid var(--line);border-radius:14px;padding:22px;}
+        .panel h3{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600;margin:0 0 4px;}
+        .panel .panel-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;}
+        .chart-wrap{position:relative;height:280px;}
+
+        .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
+        .cat-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13.5px;}
+        .cat-table td{padding:8px 0;border-top:1px solid var(--line);}
+        .cat-table td:last-child, .cat-table td:nth-child(2){text-align:right;font-family:'JetBrains Mono',monospace;}
+        .cat-table td:nth-child(2){color:var(--ink-soft);width:60px;}
+        .empty{color:var(--ink-soft);font-size:13.5px;text-align:center;padding:30px 0;}
+
+        .dot-0{background:var(--navy);} .dot-1{background:var(--gold);} .dot-2{background:var(--green);}
+        .dot-3{background:var(--amber);} .dot-4{background:var(--red);} .dot-5{background:var(--teal);}
+        .dot-6{background:var(--plum);} .dot-7{background:var(--brown);}
+
+        @media (max-width:480px){.cover{padding:32px 18px 56px;} main{padding:0 18px 50px;}}
+    </style>
 </head>
 <body>
-<div layout:fragment="content">
-    <h2 class="mb-4">Báo cáo theo danh mục</h2>
 
-    <form th:action="@{/reports}" method="get" class="row g-2 mb-4 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label small">Từ ngày</label>
-            <input type="date" name="fromDate" class="form-control" th:value="${filter.fromDate}"/>
+<div class="cover">
+    <div class="cover-top">
+        <div class="brand">
+            <div class="brand-mark">B</div>
+            <div>
+                <div class="brand-name">Báo cáo thu chi</div>
+                <div class="brand-title" th:text="${report.rangeLabel}"></div>
+            </div>
         </div>
-        <div class="col-md-3">
-            <label class="form-label small">Đến ngày</label>
-            <input type="date" name="toDate" class="form-control" th:value="${filter.toDate}"/>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small">Loại</label>
-            <select name="type" class="form-select">
-                <option th:each="t : ${types}" th:value="${t}"
-                        th:selected="${filter.type == t}"
-                        th:text="${t.name() == 'INCOME' ? 'Thu' : 'Chi'}"></option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">Xem báo cáo</button>
-        </div>
-    </form>
 
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between">
-            <span>Chi tiết theo danh mục</span>
-            <span class="fw-bold">Tổng: <span th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></span>
+        <div class="filters">
+            <div class="tabs">
+                <a th:href="@{/reports(period='week', date=${referenceDate})}"
+                   th:classappend="${period == 'week'} ? 'active'">Tuần</a>
+                <a th:href="@{/reports(period='month', date=${referenceDate})}"
+                   th:classappend="${period == 'month'} ? 'active'">Tháng</a>
+            </div>
+            <div class="nav-arrows">
+                <a th:href="@{/reports(period=${period}, date=${prevDate})}" aria-label="Kỳ trước">‹</a>
+                <a th:href="@{/reports}" class="range-label" style="text-decoration:none;">Hôm nay</a>
+                <a th:href="@{/reports(period=${period}, date=${nextDate})}" aria-label="Kỳ sau">›</a>
+            </div>
         </div>
-        <table class="table mb-0">
-            <thead>
-            <tr>
-                <th>Danh mục</th>
-                <th class="text-end">Số tiền</th>
-                <th class="text-end">Tỷ lệ</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="s : ${stats}">
-                <td>
-                    <i th:if="${s.icon}" th:class="'bi ' + ${s.icon}"></i>
-                    <span th:text="${s.categoryName}"></span>
-                </td>
-                <td class="text-end" th:text="${#numbers.formatDecimal(s.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
-                <td class="text-end"
-                    th:text="${total.compareTo(T(java.math.BigDecimal).ZERO) > 0
-                              ? #numbers.formatDecimal(s.totalAmount.multiply(T(java.math.BigDecimal).valueOf(100)).divide(total, 1, T(java.math.RoundingMode).HALF_UP), 1, 1) + '%'
-                              : '0%'}"></td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(stats)}">
-                <td colspan="3" class="text-center text-muted">Không có dữ liệu trong khoảng thời gian này</td>
-            </tr>
-            </tbody>
-        </table>
+    </div>
+
+    <div class="totals">
+        <div class="total-card income">
+            <div class="label">Tổng thu</div>
+            <div class="value" th:text="${#numbers.formatDecimal(report.totalIncome,0,'COMMA',0,'POINT')} + ' ₫'"></div>
+        </div>
+        <div class="total-card expense">
+            <div class="label">Tổng chi</div>
+            <div class="value" th:text="${#numbers.formatDecimal(report.totalExpense,0,'COMMA',0,'POINT')} + ' ₫'"></div>
+        </div>
+        <div class="total-card balance" th:classappend="${report.balance.signum() < 0} ? 'negative'">
+            <div class="label" th:text="${report.balance.signum() >= 0} ? 'Dư' : 'Thâm hụt'"></div>
+            <div class="value" th:text="${#numbers.formatDecimal(report.balance.abs(),0,'COMMA',0,'POINT')} + ' ₫'"></div>
+        </div>
     </div>
 </div>
+
+<main>
+    <div class="panels">
+        <div class="panel">
+            <h3>Thu &amp; chi theo thời gian</h3>
+            <div class="panel-sub" th:text="${period == 'month'} ? 'Gộp theo tuần trong tháng' : 'Theo từng ngày trong tuần'"></div>
+            <div class="chart-wrap"><div id="trendChart" style="height:280px"></div></div>
+        </div>
+
+        <div class="panel">
+            <h3>Phân bổ chi tiêu</h3>
+            <div class="panel-sub">Theo danh mục, trong kỳ đã chọn</div>
+            <div th:if="${#lists.isEmpty(report.categories)}" class="empty">Chưa có khoản chi nào trong kỳ này</div>
+            <div th:unless="${#lists.isEmpty(report.categories)}"
+                 class="chart-wrap d-flex align-items-center justify-content-center"
+                 style="height:360px; padding:10px;">
+                <div id="categoryChart" style="width:120%; height:100%;"></div>
+            </div>
+            <table class="cat-table" th:unless="${#lists.isEmpty(report.categories)}">
+                <tr th:each="c, stat : ${report.categories}">
+                    <td><span class="legend-dot" th:classappend="'dot-' + ${stat.index % 8}"></span><span th:text="${c.categoryName}"></span></td>
+                    <td th:text="${c.percentage} + '%'"></td>
+                    <td th:text="${#numbers.formatDecimal(c.amount,0,'COMMA',0,'POINT')} + ' ₫'"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    const trendLabels  = /*[[${report.trend.![label]}]]*/ [];
+    const trendIncome  = /*[[${report.trend.![income]}]]*/ [];
+    const trendExpense = /*[[${report.trend.![expense]}]]*/ [];
+
+    const categoryLabels = /*[[${report.categories.![categoryName]}]]*/ [];
+    const categoryAmounts = /*[[${report.categories.![amount]}]]*/ [];
+
+    const categoryChart = echarts.init(document.getElementById('categoryChart'));
+    const chart = echarts.init(document.getElementById('trendChart'));
+
+    chart.setOption({
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['Thu', 'Chi']
+        },
+        xAxis: {
+            type: 'category',
+            data: trendLabels
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                name: 'Thu',
+                type: 'bar',
+                data: trendIncome
+            },
+            {
+                name: 'Chi',
+                type: 'bar',
+                data: trendExpense
+            }
+        ]
+    });
+    categoryChart.setOption({
+        grid: {
+            left: '18%',
+            right: '8%',
+            top: '8%',
+            bottom: '8%',
+            containLabel: true
+        },
+
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function (params) {
+                const item = params[0];
+                return `${item.name}<br>${item.value.toLocaleString()} ₫`;
+            }
+        },
+
+        xAxis: {
+            type: 'value',
+            show:false
+        },
+
+        yAxis: {
+            type: 'category',
+            data: categoryLabels
+        },
+
+        series: [{
+            type: 'bar',
+            data: categoryAmounts,
+            barWidth: 22,
+            borderRadius: [0, 8, 8, 0],
+
+            label: {
+                show: true,
+                position: 'right',
+                formatter: function (params) {
+                    return params.value.toLocaleString() + ' ₫';
+                }
+            }
+        }]
+    });
+</script>
+
 </body>
 </html>

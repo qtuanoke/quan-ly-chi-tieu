@@ -1,37 +1,47 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ReportFilter;
-import com.example.demo.service.TransactionService;
-import common.TransactionType;
+import com.example.demo.dto.ReportResponseDTO;
+import com.example.demo.service.ReportService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
+
+
 @Controller
 @RequestMapping("/reports")
+@RequiredArgsConstructor
 public class ReportController {
 
-    private final TransactionService transactionService;
-
-    public ReportController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
+    private final ReportService reportService;
 
     @GetMapping
-    public String report(@ModelAttribute ReportFilter filter, Model model) {
-        var stats = transactionService.reportByCategory(filter.getType(), filter.getFromDate(), filter.getToDate());
+    public String viewReports(
+            @RequestParam(defaultValue = "week") String period,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Model model) {
 
-        BigDecimal total = stats.stream()
-                .map(s -> s.getTotalAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDate reference = (date != null) ? date : LocalDate.now();
+        boolean monthly = "month".equals(period);
 
-        model.addAttribute("filter", filter);
-        model.addAttribute("stats", stats);
-        model.addAttribute("total", total);
-        model.addAttribute("types", TransactionType.values());
+        ReportResponseDTO report = monthly
+                ? reportService.getMonthlyReport(reference.getMonthValue(), reference.getYear())
+                : reportService.getWeeklyReport(reference);
+
+        LocalDate prevDate = monthly ? reference.minusMonths(1) : reference.minusWeeks(1);
+        LocalDate nextDate = monthly ? reference.plusMonths(1) : reference.plusWeeks(1);
+
+        model.addAttribute("report", report);
+        model.addAttribute("period", period);
+        model.addAttribute("referenceDate", reference);
+        model.addAttribute("prevDate", prevDate);
+        model.addAttribute("nextDate", nextDate);
         return "report";
     }
 }

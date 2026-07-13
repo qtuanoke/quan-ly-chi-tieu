@@ -76,4 +76,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("categoryId") Long categoryId,
             @Param("month") Integer month,
             @Param("year") Integer year);
+
+    @Query("SELECT COALESCE(SUM(t.amount),0) FROM Transaction t " +
+            "WHERE t.type = :type AND t.transactionDate BETWEEN :start AND :end")
+    BigDecimal sumByTypeAndDateRange(@Param("type") TransactionType type,
+                                     @Param("start") LocalDate start,
+                                     @Param("end") LocalDate end);
+
+    @Query("SELECT t.transactionDate as date, COALESCE(SUM(t.amount),0) as total FROM Transaction t " +
+            "WHERE t.type = :type AND t.transactionDate BETWEEN :start AND :end " +
+            "GROUP BY t.transactionDate ORDER BY t.transactionDate")
+    List<DailyTotalProjection> findDailyTotals(@Param("type") TransactionType type,
+                                               @Param("start") LocalDate start,
+                                               @Param("end") LocalDate end);
+
+    @Query("SELECT c.name as categoryName, COALESCE(SUM(t.amount),0) as total FROM Transaction t " +
+            "JOIN t.category c " +
+            "WHERE t.type = :type AND t.transactionDate BETWEEN :start AND :end " +
+            "GROUP BY c.name ORDER BY total DESC")
+    List<CategoryTotalProjection> findCategoryTotals(@Param("type") TransactionType type,
+                                                     @Param("start") LocalDate start,
+                                                     @Param("end") LocalDate end);
 }
