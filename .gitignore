@@ -19,5 +19,4 @@ out/
 Thumbs.db
 
 # Application secrets - QUAN TRỌNG
-application.properties
 *.env
