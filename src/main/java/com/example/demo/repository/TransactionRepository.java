@@ -66,4 +66,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<CategoryStat> reportByCategory(@Param("type") TransactionType type,
                                         @Param("fromDate") LocalDate fromDate,
                                         @Param("toDate") LocalDate toDate);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.category.id = :categoryId " +
+            "AND t.type = 'EXPENSE' " +
+            "AND MONTH(t.transactionDate) = :month " +
+            "AND YEAR(t.transactionDate) = :year")
+    BigDecimal sumExpenseByCategoryAndMonth(
+            @Param("categoryId") Long categoryId,
+            @Param("month") Integer month,
+            @Param("year") Integer year);
 }

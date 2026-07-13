@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sổ ngân sách</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --navy-deep:#111C33; --navy:#1B2A4A; --navy-soft:#2C3E63;
+            --gold:#C9A227; --gold-bright:#E4C25E;
+            --paper:#F3EFE6; --paper-card:#FBF8F1;
+            --ink:#20232B; --ink-soft:#5B5F6B;
+            --green:#3F7A5D; --amber:#B9791F; --red:#A93A3A; --line:#DCD4C0;
+        }
+        *{box-sizing:border-box;}
+        body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+        .cover{background:radial-gradient(circle at 85% -20%, rgba(228,194,94,0.18), transparent 55%),linear-gradient(180deg, var(--navy-deep), var(--navy) 70%, var(--navy-soft));color:#F4EFE0;padding:44px 32px 64px;position:relative;overflow:hidden;}
+        .cover::after{content:"";position:absolute;left:0;right:0;bottom:0;height:28px;background:var(--paper);border-radius:50% 50% 0 0 / 100% 100% 0 0;transform:scaleX(1.3);}
+        .cover-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;max-width:1080px;margin:0 auto;}
+        .brand{display:flex;align-items:center;gap:12px;}
+        .brand-mark{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg, var(--gold-bright), var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;color:var(--navy-deep);font-size:19px;box-shadow:0 2px 0 rgba(0,0,0,0.25);}
+        .brand-name{font-family:'Fraunces',serif;font-size:15px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;}
+        .brand-title{font-family:'Fraunces',serif;font-weight:600;font-size:28px;margin-top:2px;}
+        .month-picker{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(228,194,94,0.35);padding:6px 8px;border-radius:12px;}
+        .month-picker select{appearance:none;background:transparent;border:none;color:#F4EFE0;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;padding:8px 10px;cursor:pointer;}
+        .month-picker select:focus{outline:2px solid var(--gold-bright);border-radius:8px;}
+        .month-picker option{color:var(--ink);}
+        .month-picker .divider{width:1px;height:20px;background:rgba(255,255,255,0.2);}
+        .totals{max-width:1080px;margin:34px auto 0;display:flex;gap:14px;flex-wrap:wrap;}
+        .total-card{flex:1;min-width:200px;background:rgba(255,255,255,0.05);border:1px solid rgba(228,194,94,0.22);border-radius:14px;padding:16px 20px;}
+        .total-card .label{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;opacity:.65;}
+        .total-card .value{font-family:'JetBrains Mono',monospace;font-size:23px;font-weight:600;margin-top:6px;color:#F4EFE0;}
+        .total-card.warn .value{color:var(--gold-bright);}
+        .total-card .sub{font-size:12px;opacity:.6;margin-top:4px;}
+        main{max-width:1080px;margin:0 auto;padding:0 32px 60px;}
+        .section-head{display:flex;justify-content:space-between;align-items:baseline;margin:36px 0 18px;flex-wrap:wrap;gap:8px;}
+        .section-head h2{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0;}
+        .section-head span{font-size:13px;color:var(--ink-soft);}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(270px,1fr));gap:20px;}
+        .empty-state{
+            grid-column:1 / -1; text-align:center; padding:50px 20px; color:var(--ink-soft);
+            border:1px dashed var(--line); border-radius:10px; background:var(--paper-card);
+        }
+        .empty-state strong{display:block; font-family:'Fraunces',serif; font-size:17px; color:var(--ink); margin-bottom:6px;}
+        .stub{background:var(--paper-card);border:1px solid var(--line);border-radius:4px 4px 10px 10px;position:relative;padding:26px 20px 20px;box-shadow:0 1px 0 rgba(0,0,0,0.03), 0 10px 24px -18px rgba(20,20,20,0.35);}
+        .stub::before{content:"";position:absolute;top:0;left:14px;right:14px;height:0;border-top:2px dashed #C9BFA3;}
+        .stub::after{content:"";position:absolute;top:-6px;left:0;right:0;height:12px;background:radial-gradient(circle 6px at 18px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 54px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 90px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 126px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 162px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 198px 0, transparent 98%, var(--paper) 100%),radial-gradient(circle 6px at 234px 0, transparent 98%, var(--paper) 100%);}
+        .stub-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+        .cat-name{font-family:'Fraunces',serif;font-weight:600;font-size:17px;}
+        .stamp{font-family:'Fraunces',serif;font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:2px solid currentColor;transform:rotate(-6deg);white-space:nowrap;}
+        .stamp.ok{color:var(--green);}
+        .stamp.warn{color:var(--amber);}
+        .stamp.over{color:var(--red);transform:rotate(-9deg);}
+        .amounts{margin-top:18px;font-family:'JetBrains Mono',monospace;}
+        .amounts .spent{font-size:21px;font-weight:600;}
+        .amounts .of{color:var(--ink-soft);font-size:13px;}
+        .amounts .budget{font-size:13px;color:var(--ink-soft);}
+        .gauge{margin-top:14px;}
+        .gauge-track{height:10px;background:#E9E2D0;border-radius:6px;position:relative;overflow:hidden;border:1px solid var(--line);}
+        .gauge-fill{height:100%;border-radius:6px;transition:width .5s ease;}
+        .gauge-fill.ok{background:linear-gradient(90deg,#4E9174,var(--green));}
+        .gauge-fill.warn{background:linear-gradient(90deg,#D9A13F,var(--amber));}
+        .gauge-fill.over{background:linear-gradient(90deg,#C1504F,var(--red));}
+        .gauge-ticks{display:flex;justify-content:space-between;margin-top:5px;}
+        .gauge-ticks span{font-size:10px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;}
+        .stub-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-soft);}
+        .stub-foot a{color:var(--navy);font-weight:600;text-decoration:none;font-family:'Inter',sans-serif;font-size:12.5px;cursor:pointer;}
+        .stub-foot a:hover{text-decoration:underline;}
+        .add-card{border:2px dashed #C9BFA3;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;gap:8px;color:var(--ink-soft);cursor:pointer;background:transparent;min-height:190px;font-family:'Inter',sans-serif;transition:border-color .15s, color .15s;text-decoration:none;}
+        .add-card:hover{border-color:var(--navy);color:var(--navy);}
+        .add-card .plus{width:36px;height:36px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:18px;}
+        .add-card strong{font-size:14px;}
+        .overlay{position:fixed;inset:0;background:rgba(17,28,51,0.55);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+        .overlay.open{display:flex;}
+        .modal{background:var(--paper-card);width:100%;max-width:400px;border-radius:14px;padding:28px;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);}
+        .modal h3{font-family:'Fraunces',serif;margin:0 0 4px;font-size:19px;}
+        .modal .hint{font-size:12.5px;color:var(--ink-soft);margin-bottom:20px;}
+        .field{margin-bottom:16px;}
+        .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+        .field select, .field input{width:100%;padding:11px 12px;border-radius:8px;border:1px solid var(--line);font-family:'Inter',sans-serif;font-size:14px;background:#fff;}
+        .field select:focus, .field input:focus{outline:2px solid var(--navy-soft);border-color:transparent;}
+        .field select.locked{background:#F0EEE7;color:var(--ink-soft);pointer-events:none;}
+        .modal-actions{display:flex;gap:10px;margin-top:22px;}
+        .btn{flex:1;padding:11px 14px;border-radius:8px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+        .btn-primary{background:var(--navy);color:#fff;}
+        .btn-primary:hover{background:var(--navy-soft);}
+        .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+        .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--ink-soft);cursor:pointer;}
+        .alert-error{
+            max-width:1080px;margin:20px auto 0;background:#FBEAEA;border:1px solid var(--red);
+            color:var(--red);padding:12px 16px;border-radius:8px;font-size:13.5px;
+        }
+        @media (max-width:480px){.cover{padding:32px 18px 56px;}main{padding:0 18px 50px;}}
+    </style>
+</head>
+<body>
+
+<div class="cover">
+    <div class="cover-top">
+        <div class="brand">
+            <div class="brand-mark">S</div>
+            <div>
+                <div class="brand-name">Sổ ngân sách</div>
+                <div class="brand-title" th:text="'Tháng ' + ${selectedMonth} + ' · ' + ${selectedYear}"></div>
+            </div>
+        </div>
+
+        <form th:action="@{/budgets}" method="get" class="month-picker">
+            <select name="month" onchange="this.form.submit()" aria-label="Chọn tháng">
+                <option th:each="m : ${#numbers.sequence(1,12)}"
+                        th:value="${m}" th:text="'Tháng ' + ${m}"
+                        th:selected="${m == selectedMonth}"></option>
+            </select>
+            <div class="divider"></div>
+            <select name="year" onchange="this.form.submit()" aria-label="Chọn năm">
+                <option th:each="y : ${#numbers.sequence(selectedYear - 2, selectedYear + 2)}"
+                        th:value="${y}" th:text="${y}"
+                        th:selected="${y == selectedYear}"></option>
+            </select>
+        </form>
+    </div>
+
+    <div class="totals">
+        <div class="total-card">
+            <div class="label">Tổng ngân sách</div>
+            <div class="value" th:text="${#numbers.formatDecimal(totalBudget,0,'COMMA',0,'POINT')} + ' ₫'"></div>
+        </div>
+        <div class="total-card">
+            <div class="label">Đã chi</div>
+            <div class="value" th:text="${#numbers.formatDecimal(totalSpent,0,'COMMA',0,'POINT')} + ' ₫'"></div>
+            <div class="sub" th:if="${totalBudget > 0}"
+                 th:text="${#numbers.formatDecimal((totalSpent / totalBudget) * 100, 1, 0)} + '% ngân sách tháng'"></div>
+        </div>
+        <div class="total-card" th:classappend="${totalSpent > totalBudget} ? 'warn'">
+            <div class="label" th:text="${totalSpent > totalBudget} ? 'Đã vượt' : 'Còn lại'"></div>
+            <div class="value" th:text="${#numbers.formatDecimal(#numbers.formatDecimal((totalBudget - totalSpent).abs(),0,0),0,'COMMA',0,'POINT')} + ' ₫'"></div>
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="section-head">
+        <h2>Danh mục ngân sách</h2>
+        <span th:text="${#lists.size(budgetStatuses)} + ' danh mục · cập nhật realtime theo giao dịch'"></span>
+    </div>
+
+    <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+
+    <div class="grid">
+
+        <div class="empty-state" th:if="${#lists.isEmpty(budgetStatuses)}">
+            <strong>Chưa có ngân sách nào cho tháng này</strong>
+            Bấm "Thêm ngân sách mới" bên dưới để bắt đầu theo dõi chi tiêu theo danh mục.
+        </div>
+
+        <div class="stub" th:each="b : ${budgetStatuses}">
+            <div class="stub-top">
+                <div>
+                    <div class="cat-name" th:text="${b.categoryName}"></div>
+                </div>
+                <div class="stamp"
+                     th:classappend="${b.overBudget} ? 'over' : (${b.percentage} >= 80 ? 'warn' : 'ok')"
+                     th:text="${b.overBudget} ? 'Vượt ngân sách' : (${b.percentage} >= 80 ? 'Sắp vượt' : 'Trong hạn mức')">
+                </div>
+            </div>
+
+            <div class="amounts">
+                <span class="spent" th:text="${#numbers.formatDecimal(b.spentAmount,0,'COMMA',0,'POINT')} + ' ₫'"></span>
+                <span class="of"> / </span>
+                <span class="budget" th:text="${#numbers.formatDecimal(b.budgetAmount,0,'COMMA',0,'POINT')} + ' ₫'"></span>
+            </div>
+
+            <div class="gauge">
+                <div class="gauge-track">
+                    <div class="gauge-fill"
+                         th:classappend="${b.overBudget} ? 'over' : (${b.percentage} >= 80 ? 'warn' : 'ok')"
+                         th:style="'width: ' + (${b.percentage > 100} ? 100 : ${b.percentage}) + '%'"></div>
+                </div>
+                <div class="gauge-ticks"><span>0%</span><span>50%</span><span>100%</span></div>
+            </div>
+
+            <div class="stub-foot">
+        <span th:if="${!b.overBudget}"
+              th:text="'Còn lại ' + ${#numbers.formatDecimal(b.remaining,0,'COMMA',0,'POINT')} + ' ₫'"></span>
+                <span th:if="${b.overBudget}"
+                      th:text="'Vượt ' + ${#numbers.formatDecimal(-b.remaining,0,'COMMA',0,'POINT')} + ' ₫'"></span>
+                <a th:attr="data-category-id=${b.categoryId}, data-category-name=${b.categoryName}, data-amount=${b.budgetAmount}"
+                   onclick="openEditModal(this)">Sửa</a>
+            </div>
+        </div>
+
+        <a class="add-card" href="#" onclick="openCreateModal();return false;">
+            <div class="plus">+</div>
+            <strong>Thêm ngân sách mới</strong>
+        </a>
+    </div>
+</main>
+
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <button type="button" class="close-x" onclick="closeModal()">✕</button>
+        <h3 id="modalTitle">Đặt ngân sách</h3>
+        <div class="hint" th:text="'Áp dụng cho tháng ' + ${selectedMonth} + ' · ' + ${selectedYear}"></div>
+
+        <form th:action="@{/budgets}" method="post">
+            <div class="field">
+                <label for="categoryId">Danh mục</label>
+                <select id="categoryId" name="categoryId" required>
+                    <option value="" disabled selected>-- Chọn danh mục --</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="amount">Số tiền ngân sách (VNĐ)</label>
+                <input id="amount" type="number" name="amount" min="1" step="1000" placeholder="VD: 3000000" required>
+            </div>
+            <input type="hidden" name="month" th:value="${selectedMonth}">
+            <input type="hidden" name="year" th:value="${selectedYear}">
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary">Lưu ngân sách</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="none">
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Đặt ngân sách';
+        const select = document.getElementById('categoryId');
+        select.classList.remove('locked');
+        select.value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('overlay').classList.add('open');
+    }
+
+    function openEditModal(el) {
+        const categoryId = el.getAttribute('data-category-id');
+        const categoryName = el.getAttribute('data-category-name');
+        const amount = el.getAttribute('data-amount');
+
+        document.getElementById('modalTitle').textContent = 'Sửa ngân sách: ' + categoryName;
+        const select = document.getElementById('categoryId');
+        select.value = categoryId;
+        // Khóa bằng CSS (pointer-events) thay vì "disabled" -> select vẫn gửi giá trị khi submit form
+        select.classList.add('locked');
+        document.getElementById('amount').value = amount;
+        document.getElementById('overlay').classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('overlay').classList.remove('open');
+    }
+
+    document.getElementById('overlay').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+</script>
+
+</body>
+</html>
